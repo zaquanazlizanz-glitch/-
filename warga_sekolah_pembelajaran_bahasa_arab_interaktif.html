@@ -1,0 +1,1355 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>مَنْ فِي الْمَدْرَسَةِ؟ - Warga Sekolah Interaktif</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Fredoka:wght@400;600;700&family=Inter:wght@400;500;600;700&family=Noto+Naskh+Arabic:wght@400;600;700&display=swap" rel="stylesheet">
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Canvas Confetti -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/canvas-confetti/1.6.0/confetti.browser.min.js"></script>
+
+    <style>
+        :root {
+            --arabic-font: 'Noto Naskh Arabic', 'Amiri', serif;
+            --latin-font: 'Fredoka', 'Inter', sans-serif;
+        }
+
+        body {
+            font-family: var(--latin-font);
+            background-color: #f8fafc;
+            color: #1e293b;
+            margin: 0;
+            padding: 0;
+            overflow-x: hidden;
+        }
+
+        .arabic-text {
+            font-family: var(--arabic-font);
+            direction: rtl;
+        }
+
+        .badge-capsule {
+            border-radius: 9999px;
+            padding: 0.35rem 1.4rem;
+            display: inline-block;
+            font-weight: 700;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.06);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .badge-capsule:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 14px rgba(0, 0, 0, 0.1);
+        }
+
+        /* 3D Flip Card Styles */
+        .perspective-1000 {
+            perspective: 1000px;
+        }
+
+        .flip-card {
+            background-color: transparent;
+            cursor: pointer;
+            height: 165px;
+            width: 100%;
+        }
+
+        .flip-card-inner {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            text-align: center;
+            transition: transform 0.45s cubic-bezier(0.4, 0, 0.2, 1);
+            transform-style: preserve-3d;
+            border-radius: 1.25rem;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+        }
+
+        .flip-card.flipped .flip-card-inner {
+            transform: rotateY(180deg);
+        }
+
+        .flip-card.matched .flip-card-inner {
+            transform: rotateY(180deg);
+            box-shadow: 0 0 0 4px #10b981, 0 8px 18px rgba(16, 185, 129, 0.25);
+        }
+
+        .flip-card-front, .flip-card-back {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            -webkit-backface-visibility: hidden;
+            backface-visibility: hidden;
+            border-radius: 1.25rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 0.75rem;
+        }
+
+        .flip-card-back {
+            background: linear-gradient(135deg, #6366f1 0%, #4338ca 100%);
+            color: white;
+            border: 3px solid #818cf8;
+        }
+
+        .flip-card-front {
+            background: #ffffff;
+            color: #1e1b4b;
+            transform: rotateY(180deg);
+            border: 3px solid #e0e7ff;
+        }
+
+        /* Avatar Circle for Sprite or Custom Uploaded Image */
+        .avatar-circle {
+            width: 110px;
+            height: 110px;
+            border-radius: 50%;
+            border: 4px solid #ffffff;
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
+            position: relative;
+            background-repeat: no-repeat;
+            background-color: #f1f5f9;
+            flex-shrink: 0;
+            transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        .avatar-circle:hover {
+            transform: scale(1.05);
+        }
+
+        /* Edit icon trigger */
+        .edit-badge-btn {
+            position: absolute;
+            bottom: 0;
+            right: 0;
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            background: #4f46e5;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 13px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.25);
+            border: 2px solid white;
+            cursor: pointer;
+            transition: transform 0.15s ease, background 0.15s ease;
+        }
+
+        .edit-badge-btn:hover {
+            background: #4338ca;
+            transform: scale(1.15);
+        }
+
+        .nav-btn {
+            position: relative;
+            transition: all 0.2s ease;
+        }
+
+        .nav-btn.active {
+            color: #4f46e5;
+            background-color: #e0e7ff;
+            font-weight: 700;
+        }
+
+        @keyframes gentle-bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-6px); }
+        }
+
+        .animate-gentle {
+            animation: gentle-bounce 3s infinite ease-in-out;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between">
+
+    <!-- Top Navigation Bar -->
+    <header class="bg-white/95 backdrop-blur shadow-sm sticky top-0 z-40 border-b border-indigo-50">
+        <div class="max-w-6xl mx-auto px-4 py-3 flex flex-wrap items-center justify-between gap-3">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-2xl bg-indigo-600 text-white flex items-center justify-center text-xl shadow-md shadow-indigo-200">
+                    🏫
+                </div>
+                <div>
+                    <h1 class="text-lg md:text-xl font-bold text-indigo-950 leading-tight arabic-text">
+                        مَنْ فِي الْمَدْرَسَةِ؟
+                    </h1>
+                    <p class="text-xs text-indigo-600 font-semibold tracking-wide">
+                        Warga Sekolah — Bahasa Arab Rendah
+                    </p>
+                </div>
+            </div>
+
+            <!-- Tab Buttons -->
+            <nav class="flex items-center gap-1 sm:gap-2 overflow-x-auto py-1 max-w-full">
+                <button onclick="switchTab('home')" id="tab-home" class="nav-btn active px-3.5 py-1.5 rounded-xl text-xs sm:text-sm text-slate-700 flex items-center gap-1.5 font-semibold">
+                    🏠 <span>Utama</span>
+                </button>
+                <button onclick="switchTab('notes')" id="tab-notes" class="nav-btn px-3.5 py-1.5 rounded-xl text-xs sm:text-sm text-slate-700 flex items-center gap-1.5 font-semibold">
+                    📖 <span>Nota</span>
+                </button>
+                <button onclick="switchTab('speech')" id="tab-speech" class="nav-btn px-3.5 py-1.5 rounded-xl text-xs sm:text-sm text-slate-700 flex items-center gap-1.5 font-semibold">
+                    🔊 <span>Sebutan</span>
+                </button>
+                <button onclick="switchTab('games')" id="tab-games" class="nav-btn px-3.5 py-1.5 rounded-xl text-xs sm:text-sm text-slate-700 flex items-center gap-1.5 font-semibold">
+                    🎮 <span>Permainan</span>
+                </button>
+                <button onclick="switchTab('score')" id="tab-score" class="nav-btn px-3.5 py-1.5 rounded-xl text-xs sm:text-sm text-slate-700 flex items-center gap-1.5 font-semibold">
+                    🏆 <span>Skor</span>
+                </button>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <main class="max-w-6xl mx-auto px-4 py-6 w-full flex-1">
+
+        <!-- TAB 1: UTAMA (HOME) -->
+        <section id="section-home" class="space-y-8">
+            <!-- Hero Card -->
+            <div class="relative overflow-hidden rounded-3xl bg-gradient-to-br from-indigo-500 via-indigo-600 to-purple-600 text-white p-6 sm:p-10 shadow-xl shadow-indigo-200">
+                <div class="relative z-10 max-w-2xl space-y-4">
+                    <span class="inline-block px-3 py-1 bg-white/20 backdrop-blur-md rounded-full text-xs font-bold tracking-wider uppercase">
+                        🌟 Mari Belajar Bersama!
+                    </span>
+                    <h2 class="text-3xl sm:text-4xl md:text-5xl font-extrabold tracking-tight arabic-text leading-snug">
+                        مَنْ فِي الْمَدْرَسَةِ؟
+                    </h2>
+                    <p class="text-indigo-100 text-sm sm:text-base md:text-lg leading-relaxed">
+                        Jom kenali 14 watak warga sekolah dalam Bahasa Arab melalui kad pembelajaran visual, latihan sebutan interaktif, dan permainan 12 kad mencabar!
+                    </p>
+                    <div class="pt-2 flex flex-wrap gap-3">
+                        <button onclick="switchTab('notes')" class="px-5 py-2.5 bg-yellow-300 text-indigo-950 font-bold rounded-2xl shadow-lg shadow-yellow-500/30 hover:bg-yellow-200 transition-all transform hover:-translate-y-0.5 text-sm sm:text-base">
+                            📖 Terokai & Edit Watak
+                        </button>
+                        <button onclick="switchTab('games')" class="px-5 py-2.5 bg-white/10 hover:bg-white/20 text-white font-bold rounded-2xl backdrop-blur transition-all text-sm sm:text-base border border-white/20">
+                            🎮 Main Permainan (12 Kad)
+                        </button>
+                    </div>
+                </div>
+                <div class="absolute -right-6 -bottom-8 text-8xl md:text-9xl opacity-20 pointer-events-none animate-gentle select-none">
+                    🏫
+                </div>
+            </div>
+
+            <!-- Quick Glance: 14 Roles Grid Preview -->
+            <div class="bg-white rounded-3xl p-6 sm:p-8 shadow-sm border border-slate-100 space-y-4">
+                <div class="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 pb-4">
+                    <div>
+                        <h3 class="text-xl font-bold text-slate-800">Senarai 14 Warga Sekolah</h3>
+                        <p class="text-xs sm:text-sm text-slate-500">Klik ikon audio untuk sebutan, atau ikon ✏️ di tab Nota untuk menukar gambar.</p>
+                    </div>
+                    <span class="px-3 py-1 bg-indigo-50 text-indigo-600 font-bold text-xs rounded-full">
+                        14 Watak Lengkap
+                    </span>
+                </div>
+                <div id="homeRolesGrid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-7 gap-3 sm:gap-4 pt-2">
+                    <!-- Populated by JavaScript -->
+                </div>
+            </div>
+        </section>
+
+        <!-- TAB 2: NOTA INTERAKTIF & EDIT GAMBAR (NOTES) -->
+        <section id="section-notes" class="hidden space-y-6">
+            <!-- Header Controls -->
+            <div class="bg-white rounded-3xl p-6 shadow-sm border border-slate-100 flex flex-wrap items-center justify-between gap-4">
+                <div>
+                    <h2 class="text-2xl font-bold text-slate-800">📖 Kad Pembelajaran & Edit Gambar</h2>
+                    <p class="text-sm text-slate-500">Klik butang pensel (✏️) pada mana-mana gambar untuk menukar gambar mengikut pilihan anda!</p>
+                </div>
+                <!-- Gender Filter Tabs -->
+                <div class="flex items-center gap-1.5 bg-slate-100 p-1.5 rounded-2xl">
+                    <button onclick="filterNoteCards('all')" id="filter-all" class="px-3 py-1.5 rounded-xl text-xs sm:text-sm font-bold bg-white text-indigo-600 shadow-sm transition">
+                        Semua (14)
+                    </button>
+                    <button onclick="filterNoteCards('muzakkar')" id="filter-muzakkar" class="px-3 py-1.5 rounded-xl text-xs sm:text-sm font-bold text-slate-600 hover:text-indigo-600 transition">
+                        👦 Lelaki (6)
+                    </button>
+                    <button onclick="filterNoteCards('muannath')" id="filter-muannath" class="px-3 py-1.5 rounded-xl text-xs sm:text-sm font-bold text-slate-600 hover:text-indigo-600 transition">
+                        👧 Perempuan (8)
+                    </button>
+                </div>
+            </div>
+
+            <!-- 14 Detailed Role Cards Grid -->
+            <div id="noteCardsContainer" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+                <!-- Populated dynamically -->
+            </div>
+        </section>
+
+        <!-- TAB 3: SEBUTAN & SUKU KATA (SPEECH) -->
+        <section id="section-speech" class="hidden space-y-6">
+            <div class="max-w-3xl mx-auto bg-white rounded-3xl p-6 sm:p-10 shadow-sm border border-slate-100 text-center space-y-6">
+                <div>
+                    <span class="px-3 py-1 bg-amber-100 text-amber-800 font-bold text-xs rounded-full uppercase tracking-wider">
+                        🔊 Studio Sebutan Arab
+                    </span>
+                    <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-800 mt-2 arabic-text">
+                        مَنْ فِي الْمَدْرَسَةِ؟
+                    </h2>
+                    <p class="text-sm text-slate-500 max-w-md mx-auto mt-1">
+                        Dengarkan pecahan suku kata berbaris dan bandingkan sebutan anda menggunakan mikrofon!
+                    </p>
+                </div>
+
+                <!-- Main Card in Studio -->
+                <div class="bg-gradient-to-b from-indigo-50/50 to-white border-2 border-indigo-100 rounded-3xl p-6 sm:p-8 space-y-6">
+                    <div class="flex justify-center">
+                        <div id="speechAvatar" class="avatar-circle w-32 h-32 border-4 border-indigo-300 shadow-xl"></div>
+                    </div>
+
+                    <div class="space-y-2">
+                        <h3 id="speechArabic" class="text-4xl sm:text-5xl font-bold arabic-text text-indigo-950">
+                            مُدِيرٌ
+                        </h3>
+                        <p id="speechSyllables" class="text-lg font-bold text-indigo-600">
+                            [ مُـ - دِيـ - رٌ ]
+                        </p>
+                        <p id="speechMalay" class="text-base text-slate-600 font-medium">
+                            Guru Besar (Lelaki)
+                        </p>
+                    </div>
+
+                    <!-- Audio Controls -->
+                    <div class="flex flex-wrap justify-center items-center gap-3 pt-2">
+                        <button onclick="playSpeechCurrent(1.0)" class="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-2xl shadow-lg shadow-indigo-300 flex items-center gap-2 text-sm sm:text-base transition transform hover:-translate-y-0.5">
+                            🔊 Sebutan Normal
+                        </button>
+                        <button onclick="playSpeechCurrent(0.65)" class="px-5 py-2.5 bg-amber-500 hover:bg-amber-600 text-white font-bold rounded-2xl shadow-lg shadow-amber-200 flex items-center gap-2 text-sm sm:text-base transition transform hover:-translate-y-0.5">
+                            🐢 Sebutan Perlahan
+                        </button>
+                        <button onclick="recordAndCheckSpeech()" id="btnVoiceTest" class="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-2xl shadow-lg shadow-emerald-200 flex items-center gap-2 text-sm sm:text-base transition transform hover:-translate-y-0.5">
+                            🎤 Uji Suara Saya
+                        </button>
+                    </div>
+
+                    <div id="speechFeedback" class="hidden text-sm font-bold p-3 rounded-2xl bg-indigo-50 text-indigo-700"></div>
+                </div>
+
+                <!-- Navigation between 14 roles -->
+                <div class="flex justify-between items-center px-4">
+                    <button onclick="prevSpeechRole()" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 font-bold rounded-xl text-slate-700 text-sm transition">
+                        ⬅️ Sebelumnya
+                    </button>
+                    <span id="speechRoleIndicator" class="text-xs font-bold text-slate-400">
+                        Watak 1 / 14
+                    </span>
+                    <button onclick="nextSpeechRole()" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 font-bold rounded-xl text-slate-700 text-sm transition">
+                        Seterusnya ➡️
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- TAB 4: PERMAINAN (GAMES) -->
+        <section id="section-games" class="hidden space-y-6">
+            <!-- Center Game Title Banner with Requested Title -->
+            <div class="bg-gradient-to-r from-violet-600 via-indigo-600 to-indigo-700 rounded-3xl p-6 sm:p-8 text-white text-center shadow-lg shadow-indigo-200 space-y-2">
+                <div class="text-4xl">🎮✨</div>
+                <h2 class="text-3xl sm:text-4xl md:text-5xl font-extrabold arabic-text leading-tight">
+                    مَنْ فِي الْمَدْرَسَةِ؟
+                </h2>
+                <p class="text-indigo-100 text-sm sm:text-base font-semibold">
+                    Siapa di Sekolah? — Pusat Permainan Interaktif
+                </p>
+                <p class="text-xs sm:text-sm text-indigo-200 max-w-md mx-auto">
+                    Pilih mod permainan di bawah. Mod Flip & Match kini diperluaskan kepada 12 keping kad padanan!
+                </p>
+            </div>
+
+            <!-- Mini Game Sub-Tabs Navigation -->
+            <div class="flex flex-wrap items-center justify-center gap-2">
+                <button onclick="switchGameSubMode('flip')" id="btn-sub-flip" class="px-4 py-2 rounded-2xl font-bold text-xs sm:text-sm bg-indigo-600 text-white shadow-md shadow-indigo-200 transition">
+                    🃏 Flip & Match (12 Kad)
+                </button>
+                <button onclick="switchGameSubMode('quiz')" id="btn-sub-quiz" class="px-4 py-2 rounded-2xl font-bold text-xs sm:text-sm bg-white text-slate-700 hover:bg-slate-50 transition border border-slate-200">
+                    🎯 Kuiz Bergambar
+                </button>
+                <button onclick="switchGameSubMode('audio')" id="btn-sub-audio" class="px-4 py-2 rounded-2xl font-bold text-xs sm:text-sm bg-white text-slate-700 hover:bg-slate-50 transition border border-slate-200">
+                    👂🏻 Teka Suara
+                </button>
+                <button onclick="switchGameSubMode('gender')" id="btn-sub-gender" class="px-4 py-2 rounded-2xl font-bold text-xs sm:text-sm bg-white text-slate-700 hover:bg-slate-50 transition border border-slate-200">
+                    ⚖️ Jantina (Muzakkar/Muannath)
+                </button>
+            </div>
+
+            <!-- SUB-MODE 1: FLIP & MATCH (12 CARDS) -->
+            <div id="game-sub-flip" class="bg-white rounded-3xl p-6 shadow-sm border border-slate-100 space-y-6">
+                <div class="flex flex-wrap items-center justify-between gap-4 border-b border-slate-100 pb-4">
+                    <div>
+                        <h3 class="text-xl font-bold text-slate-800 flex items-center gap-2">
+                            <span>🃏 Flip & Match (12 Kad)</span>
+                            <span class="text-sm font-semibold text-indigo-600 arabic-text">(قَلْبٌ وَمُطَابَقَةٌ)</span>
+                        </h3>
+                        <p class="text-xs text-slate-500">Padankan 6 gambar watak dengan 6 maksud bahasa Melayu yang sepadan!</p>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <div class="px-3 py-1.5 bg-indigo-50 text-indigo-700 font-bold rounded-xl text-xs flex items-center gap-1.5">
+                            ⏱️ Masa: <span id="flipTimer">0s</span>
+                        </div>
+                        <div class="px-3 py-1.5 bg-amber-50 text-amber-700 font-bold rounded-xl text-xs flex items-center gap-1.5">
+                            🔄 Cubaan: <span id="flipMoves">0</span>
+                        </div>
+                        <button onclick="initFlipAndMatchGame()" class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 font-bold rounded-xl text-xs text-slate-700 transition">
+                            Mula Semula 🔄
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 12 Cards Grid (3 columns on mobile, 4 columns on desktop) -->
+                <div id="flipCardsGrid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 sm:gap-4 perspective-1000">
+                    <!-- Populated dynamically with 12 cards -->
+                </div>
+            </div>
+
+            <!-- SUB-MODE 2: KUIZ BERGAMBAR -->
+            <div id="game-sub-quiz" class="hidden bg-white rounded-3xl p-6 sm:p-8 shadow-sm border border-slate-100 max-w-xl mx-auto space-y-6 text-center">
+                <div class="space-y-1">
+                    <span class="text-xs font-bold text-indigo-600 uppercase tracking-wider">Kuiz Pantas</span>
+                    <h3 class="text-2xl font-bold text-slate-800 arabic-text">مَنْ فِي الْمَدْرَسَةِ؟</h3>
+                    <p class="text-xs text-slate-500">Pilih nama Bahasa Arab yang betul bagi gambar di bawah:</p>
+                </div>
+
+                <div class="flex justify-center">
+                    <div id="quizAvatar" class="avatar-circle w-32 h-32 border-4 border-indigo-200"></div>
+                </div>
+
+                <div id="quizOptionsGrid" class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <!-- 4 options generated here -->
+                </div>
+
+                <div id="quizFeedback" class="hidden p-3 rounded-2xl font-bold text-sm"></div>
+            </div>
+
+            <!-- SUB-MODE 3: TEKA SUARA -->
+            <div id="game-sub-audio" class="hidden bg-white rounded-3xl p-6 sm:p-8 shadow-sm border border-slate-100 max-w-xl mx-auto space-y-6 text-center">
+                <div class="space-y-1">
+                    <span class="text-xs font-bold text-amber-600 uppercase tracking-wider">Ujian Pendengaran</span>
+                    <h3 class="text-2xl font-bold text-slate-800 arabic-text">مَنْ فِي الْمَدْرَسَةِ؟ (اِسْتَمِعْ وَاخْتَرْ)</h3>
+                    <p class="text-xs text-slate-500">Tekan butang dengar dan pilih watak yang diucapkan:</p>
+                </div>
+
+                <div class="py-2">
+                    <button onclick="playListeningAudioPrompt()" class="w-20 h-20 rounded-full bg-indigo-600 hover:bg-indigo-700 text-white text-3xl shadow-lg shadow-indigo-300 mx-auto flex items-center justify-center transition transform hover:scale-105">
+                        🔊
+                    </button>
+                    <p class="text-xs text-slate-400 mt-2 font-semibold">Klik untuk dengar sebutan</p>
+                </div>
+
+                <div id="audioOptionsGrid" class="grid grid-cols-2 gap-3">
+                    <!-- 4 character options -->
+                </div>
+
+                <div id="audioFeedback" class="hidden p-3 rounded-2xl font-bold text-sm"></div>
+            </div>
+
+            <!-- SUB-MODE 4: GENDER CLASSIFIER -->
+            <div id="game-sub-gender" class="hidden bg-white rounded-3xl p-6 sm:p-8 shadow-sm border border-slate-100 max-w-xl mx-auto space-y-6 text-center">
+                <div class="space-y-1">
+                    <span class="text-xs font-bold text-purple-600 uppercase tracking-wider">Muzakkar vs Muannath</span>
+                    <h3 class="text-2xl font-bold text-slate-800 arabic-text">هَلْ هَذَا مُذَكَّرٌ أَمْ مُؤَنَّثٌ؟</h3>
+                    <p class="text-xs text-slate-500">Kenal pasti jantina bagi watak berikut:</p>
+                </div>
+
+                <div class="p-6 bg-slate-50 rounded-2xl border border-slate-100 space-y-2">
+                    <div id="genderAvatar" class="avatar-circle w-24 h-24 mx-auto border-2 border-indigo-200"></div>
+                    <h4 id="genderArabicWord" class="text-3xl font-bold arabic-text text-indigo-950">
+                        مُعَلِّمَةٌ
+                    </h4>
+                    <p id="genderMalayWord" class="text-sm font-semibold text-slate-600">
+                        Guru (Perempuan)
+                    </p>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <button onclick="answerGenderClassification('muzakkar')" class="py-3 px-4 rounded-2xl bg-blue-50 hover:bg-blue-100 text-blue-700 font-bold border-2 border-blue-200 transition">
+                        👦 مُذَكَّرٌ (Lelaki)
+                    </button>
+                    <button onclick="answerGenderClassification('muannath')" class="py-3 px-4 rounded-2xl bg-pink-50 hover:bg-pink-100 text-pink-700 font-bold border-2 border-pink-200 transition">
+                        👧 مُؤَنَّثٌ (Perempuan)
+                    </button>
+                </div>
+
+                <div id="genderFeedback" class="hidden p-3 rounded-2xl font-bold text-sm"></div>
+            </div>
+        </section>
+
+        <!-- TAB 5: SKOR & PENCAPAIAN (SCORE) -->
+        <section id="section-score" class="hidden space-y-6">
+            <div class="bg-white rounded-3xl p-6 sm:p-10 shadow-sm border border-slate-100 max-w-3xl mx-auto space-y-8">
+                <div class="text-center space-y-2">
+                    <span class="text-4xl">🏆</span>
+                    <h2 class="text-3xl font-extrabold text-slate-800">Pencapaian & Skor Anda</h2>
+                    <p class="text-sm text-slate-500">Tahniah atas usaha gigih anda mempelajari Bahasa Arab!</p>
+                </div>
+
+                <!-- Score Stats Cards -->
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <div class="p-5 rounded-2xl bg-indigo-50 border border-indigo-100 text-center">
+                        <div class="text-3xl font-black text-indigo-600" id="statScoreTotal">0</div>
+                        <div class="text-xs font-bold text-indigo-900 mt-1 uppercase">Jumlah Mata</div>
+                    </div>
+                    <div class="p-5 rounded-2xl bg-amber-50 border border-amber-100 text-center">
+                        <div class="text-3xl font-black text-amber-600" id="statCorrectTotal">0</div>
+                        <div class="text-xs font-bold text-amber-900 mt-1 uppercase">Jawapan Betul</div>
+                    </div>
+                    <div class="p-5 rounded-2xl bg-emerald-50 border border-emerald-100 text-center">
+                        <div class="text-3xl font-black text-emerald-600" id="statMatchesTotal">0</div>
+                        <div class="text-xs font-bold text-emerald-900 mt-1 uppercase">Padanan Lengkap</div>
+                    </div>
+                </div>
+
+                <div class="text-center pt-2">
+                    <button onclick="resetPlayerScore()" class="px-4 py-2 text-xs text-red-500 hover:text-red-700 font-bold transition">
+                        Set Semula Skor 🗑️
+                    </button>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- MODAL: EDIT GAMBAR WATAK -->
+    <div id="editImageModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-3xl max-w-md w-full p-6 space-y-5 shadow-2xl">
+            <div class="flex items-center justify-between border-b pb-3">
+                <h3 class="text-lg font-bold text-slate-800">✏️ Sunting Gambar Watak</h3>
+                <button onclick="closeEditImageModal()" class="w-8 h-8 rounded-full bg-slate-100 text-slate-500 font-bold hover:bg-slate-200">✕</button>
+            </div>
+
+            <div class="text-center space-y-3">
+                <div class="flex justify-center">
+                    <div id="modalPreviewAvatar" class="avatar-circle w-28 h-28 border-4 border-indigo-200"></div>
+                </div>
+                <div>
+                    <h4 id="modalRoleArabic" class="text-2xl font-bold arabic-text text-indigo-950">مُدِيرٌ</h4>
+                    <p id="modalRoleMalay" class="text-xs text-slate-500 font-medium">Guru Besar (Lelaki)</p>
+                </div>
+            </div>
+
+            <!-- Upload Custom File -->
+            <div class="space-y-2">
+                <label class="block text-xs font-bold text-slate-700">Pilih Gambar Baharu Dari Peranti:</label>
+                <input type="file" id="modalFileInput" accept="image/*" onchange="handleModalImageUpload(event)" class="w-full text-xs text-slate-500 file:mr-3 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100">
+                <p class="text-[11px] text-slate-400">Gambar akan dimuatkan dan disimpan dalam pelayar anda secara serta-merta.</p>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="flex gap-2 pt-2">
+                <button onclick="resetRoleToDefault()" class="flex-1 py-2 rounded-xl bg-slate-100 text-slate-600 font-bold text-xs hover:bg-slate-200 transition">
+                    🔄 Guna Gambar Asal
+                </button>
+                <button onclick="saveAndCloseModal()" class="flex-1 py-2 rounded-xl bg-indigo-600 text-white font-bold text-xs hover:bg-indigo-700 shadow-md shadow-indigo-200 transition">
+                    💾 Selesai
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-white border-t border-slate-100 py-4 text-center text-xs text-slate-400">
+        <p>Bahan Pembelajaran Interaktif Bahasa Arab Sekolah Rendah — مَنْ فِي الْمَدْرَسَةِ؟</p>
+    </footer>
+
+    <!-- JAVASCRIPT LOGIC -->
+    <script>
+        // --- 1. DATA: 14 ROLES OF SCHOOL CITIZENS ---
+        const ROLES_DATA = [
+            {
+                id: 'mudir',
+                arabic: 'مُدِيرٌ',
+                malay: 'Guru Besar (Lelaki)',
+                gender: 'muzakkar',
+                syllables: 'مُـ - دِيـ - رٌ',
+                badgeBg: '#bae6fd',
+                badgeText: '#0369a1',
+                desc: 'Memimpin sekolah dan menaikkan bendera perhimpunan.',
+                posX: '9.5%', posY: '8.2%', size: '420%'
+            },
+            {
+                id: 'katib',
+                arabic: 'كَاتِبٌ',
+                malay: 'Kerani (Lelaki)',
+                gender: 'muzakkar',
+                syllables: 'كَـ - تِـ - بٌ',
+                badgeBg: '#fef08a',
+                badgeText: '#a16207',
+                desc: 'Menguruskan surat-menyurat dan dokumen di pejabat.',
+                posX: '36.5%', posY: '8.2%', size: '420%'
+            },
+            {
+                id: 'haris',
+                arabic: 'حَارِسٌ',
+                malay: 'Pengawal Keselamatan (Lelaki)',
+                gender: 'muzakkar',
+                syllables: 'حَـ - رِ - سٌ',
+                badgeBg: '#bbf7d0',
+                badgeText: '#15803d',
+                desc: 'Menjaga keselamatan di pintu pagar sekolah.',
+                posX: '63.5%', posY: '8.2%', size: '420%'
+            },
+            {
+                id: 'muallim',
+                arabic: 'مُعَلِّمٌ',
+                malay: 'Guru (Lelaki)',
+                gender: 'muzakkar',
+                syllables: 'مُـ - عَـ - لِّـ - مٌ',
+                badgeBg: '#e9d5ff',
+                badgeText: '#7e22ce',
+                desc: 'Mendidik murid-murid di dalam bilik darjah.',
+                posX: '90.5%', posY: '8.2%', size: '420%'
+            },
+            {
+                id: 'tilmiz',
+                arabic: 'تِلْمِيذٌ',
+                malay: 'Murid (Lelaki)',
+                gender: 'muzakkar',
+                syllables: 'تِـ - لْـ - مِيـ - ذٌ',
+                badgeBg: '#fbcfe8',
+                badgeText: '#be185d',
+                desc: 'Rajin belajar dan menulis nota di atas meja.',
+                posX: '9.5%', posY: '36.2%', size: '420%'
+            },
+            {
+                id: 'arif',
+                arabic: 'عَرِيفٌ',
+                malay: 'Pengawas (Lelaki)',
+                gender: 'muzakkar',
+                syllables: 'عَـ - رِيـ - فٌ',
+                badgeBg: '#bae6fd',
+                badgeText: '#0369a1',
+                desc: 'Menjaga disiplin dengan menggunakan pembesar suara.',
+                posX: '36.5%', posY: '36.2%', size: '420%'
+            },
+            {
+                id: 'mudirah',
+                arabic: 'مُدِيرَةٌ',
+                malay: 'Guru Besar (Perempuan)',
+                gender: 'muannath',
+                syllables: 'مُـ - دِيـ - رَ - ةٌ',
+                badgeBg: '#fbcfe8',
+                badgeText: '#be185d',
+                desc: 'Guru Besar wanita yang mesra dan berwibawa.',
+                posX: '63.5%', posY: '36.2%', size: '420%'
+            },
+            {
+                id: 'katibah1',
+                arabic: 'كَاتِبَةٌ',
+                malay: 'Kerani (Perempuan)',
+                gender: 'muannath',
+                syllables: 'كَـ - تِـ - بَـ - ةٌ',
+                badgeBg: '#fef08a',
+                badgeText: '#a16207',
+                desc: 'Menaip laporan menggunakan komputer riba di pejabat.',
+                posX: '90.5%', posY: '36.2%', size: '420%'
+            },
+            {
+                id: 'harisah1',
+                arabic: 'حَارِسَةٌ',
+                malay: 'Pengawal Keselamatan (Perempuan)',
+                gender: 'muannath',
+                syllables: 'حَـ - رِ - سَـ - ةٌ',
+                badgeBg: '#bbf7d0',
+                badgeText: '#15803d',
+                desc: 'Pengawal wanita yang sentiasa bersedia di pos kawalan.',
+                posX: '9.5%', posY: '64.2%', size: '420%'
+            },
+            {
+                id: 'muallimah',
+                arabic: 'مُعَلِّمَةٌ',
+                malay: 'Guru (Perempuan)',
+                gender: 'muannath',
+                syllables: 'مُـ - عَـ - لِّـ - مَـ - ةٌ',
+                badgeBg: '#e9d5ff',
+                badgeText: '#7e22ce',
+                desc: 'Mengajar Bahasa Arab di papan putih kelas.',
+                posX: '36.5%', posY: '64.2%', size: '420%'
+            },
+            {
+                id: 'tilmizah',
+                arabic: 'تِلْمِيذَةٌ',
+                malay: 'Murid (Perempuan)',
+                gender: 'muannath',
+                syllables: 'تِـ - لْـ - مِيـ - ذَ - ةٌ',
+                badgeBg: '#bae6fd',
+                badgeText: '#0369a1',
+                desc: 'Kumpulan murid perempuan yang ceria dan bersemangat.',
+                posX: '63.5%', posY: '64.2%', size: '420%'
+            },
+            {
+                id: 'arifah',
+                arabic: 'عَرِيفَةٌ',
+                malay: 'Pengawas (Perempuan)',
+                gender: 'muannath',
+                syllables: 'عَـ - رِيـ - فَـ - ةٌ',
+                badgeBg: '#fbcfe8',
+                badgeText: '#be185d',
+                desc: 'Membawa papan klip untuk mencatat maklumat disiplin.',
+                posX: '90.5%', posY: '64.2%', size: '420%'
+            },
+            {
+                id: 'katibah2',
+                arabic: 'كَاتِبَةٌ',
+                malay: 'Kerani (Perempuan 2)',
+                gender: 'muannath',
+                syllables: 'كَـ - تِـ - بَـ - ةٌ',
+                badgeBg: '#fef08a',
+                badgeText: '#a16207',
+                desc: 'Kerani pentadbiran yang teliti menyemak data murid.',
+                posX: '36.5%', posY: '89.5%', size: '420%'
+            },
+            {
+                id: 'harisah2',
+                arabic: 'حَارِسَةٌ',
+                malay: 'Pengawal Keselamatan (Perempuan 2)',
+                gender: 'muannath',
+                syllables: 'حَـ - رِ - سَـ - ةٌ',
+                badgeBg: '#bbf7d0',
+                badgeText: '#15803d',
+                desc: 'Pengawal keselamatan yang bertugas menjaga pintu pagar utama.',
+                posX: '63.5%', posY: '89.5%', size: '420%'
+            }
+        ];
+
+        const POSTER_SRC = 'Arabic School Roles Learning Poster.png';
+
+        // --- 2. STATE MANAGEMENT ---
+        let userScore = 0;
+        let correctAnswers = 0;
+        let matchedPairsCount = 0;
+        let currentSpeechIndex = 0;
+
+        // Flip & Match Game State (12 Cards = 6 Pairs)
+        let flipCards = [];
+        let flippedIndices = [];
+        let flipMoves = 0;
+        let flipSeconds = 0;
+        let flipTimerInterval = null;
+        let isFlipLocked = false;
+
+        // Modals & Editing
+        let roleBeingEdited = null;
+
+        // Current Quiz State
+        let currentQuizRole = null;
+        let currentAudioRole = null;
+        let currentGenderRole = null;
+
+        // --- 3. HELPER: SETUP AVATAR STYLING (SPRITE OR CUSTOM UPLOAD) ---
+        function applyAvatarStyle(el, role) {
+            if (!el || !role) return;
+            const customImg = localStorage.getItem('custom_role_img_' + role.id);
+            if (customImg) {
+                el.style.backgroundImage = `url("${customImg}")`;
+                el.style.backgroundPosition = 'center';
+                el.style.backgroundSize = 'cover';
+            } else {
+                el.style.backgroundImage = `url("${POSTER_SRC}")`;
+                el.style.backgroundPosition = `${role.posX} ${role.posY}`;
+                el.style.backgroundSize = role.size;
+            }
+        }
+
+        // --- 4. NAVIGATION & TABS ---
+        function switchTab(tabName) {
+            const tabs = ['home', 'notes', 'speech', 'games', 'score'];
+            tabs.forEach(t => {
+                const sec = document.getElementById('section-' + t);
+                const btn = document.getElementById('tab-' + t);
+                if (sec) sec.classList.toggle('hidden', t !== tabName);
+                if (btn) btn.classList.toggle('active', t === tabName);
+            });
+
+            if (tabName === 'speech') updateSpeechStudioUI();
+            if (tabName === 'games') initFlipAndMatchGame();
+            if (tabName === 'score') updateScoreUI();
+        }
+
+        // --- 5. RENDER HOME & NOTES ---
+        function renderHomeCards() {
+            const container = document.getElementById('homeRolesGrid');
+            if (!container) return;
+            container.innerHTML = '';
+
+            ROLES_DATA.forEach(role => {
+                const card = document.createElement('div');
+                card.className = 'bg-slate-50 hover:bg-indigo-50/60 p-3 rounded-2xl border border-slate-100 flex flex-col items-center text-center cursor-pointer transition transform hover:-translate-y-1';
+                card.onclick = () => speakArabic(role.arabic);
+
+                const avatar = document.createElement('div');
+                avatar.className = 'avatar-circle w-16 h-16 sm:w-20 sm:h-20 mb-2 border-2 border-white';
+                applyAvatarStyle(avatar, role);
+
+                const title = document.createElement('div');
+                title.className = 'arabic-text text-base sm:text-lg font-bold text-slate-800';
+                title.textContent = role.arabic;
+
+                const sub = document.createElement('div');
+                sub.className = 'text-[11px] text-slate-500 font-medium truncate w-full';
+                sub.textContent = role.malay.split('(')[0].trim();
+
+                card.appendChild(avatar);
+                card.appendChild(title);
+                card.appendChild(sub);
+                container.appendChild(card);
+            });
+        }
+
+        function renderNoteCards(filter = 'all') {
+            const container = document.getElementById('noteCardsContainer');
+            if (!container) return;
+            container.innerHTML = '';
+
+            const list = ROLES_DATA.filter(r => filter === 'all' || r.gender === filter);
+
+            list.forEach(role => {
+                const card = document.createElement('div');
+                card.className = 'bg-white rounded-3xl p-5 border border-slate-100 shadow-sm flex items-center gap-4 hover:shadow-md transition relative';
+
+                // Avatar container with edit pencil button
+                const avatarWrap = document.createElement('div');
+                avatarWrap.className = 'relative flex-shrink-0';
+
+                const avatar = document.createElement('div');
+                avatar.className = 'avatar-circle w-20 h-20 border-2 border-indigo-100';
+                applyAvatarStyle(avatar, role);
+
+                const editBtn = document.createElement('button');
+                editBtn.className = 'edit-badge-btn';
+                editBtn.title = 'Edit / Tukar Gambar Watak';
+                editBtn.innerHTML = '✏️';
+                editBtn.onclick = (e) => {
+                    e.stopPropagation();
+                    openEditImageModal(role);
+                };
+
+                avatarWrap.appendChild(avatar);
+                avatarWrap.appendChild(editBtn);
+
+                const info = document.createElement('div');
+                info.className = 'flex-1 space-y-1';
+
+                const header = document.createElement('div');
+                header.className = 'flex items-center justify-between';
+
+                const badge = document.createElement('span');
+                badge.className = 'badge-capsule text-xs arabic-text';
+                badge.style.backgroundColor = role.badgeBg;
+                badge.style.color = role.badgeText;
+                badge.textContent = role.arabic;
+
+                const genderTag = document.createElement('span');
+                genderTag.className = 'text-[11px] font-bold px-2 py-0.5 rounded-full ' + 
+                    (role.gender === 'muzakkar' ? 'bg-blue-50 text-blue-600' : 'bg-pink-50 text-pink-600');
+                genderTag.textContent = role.gender === 'muzakkar' ? '👦 Muzakkar' : '👧 Muannath';
+
+                header.appendChild(badge);
+                header.appendChild(genderTag);
+
+                const malayName = document.createElement('h4');
+                malayName.className = 'font-bold text-slate-800 text-sm mt-1';
+                malayName.textContent = role.malay;
+
+                const syllables = document.createElement('p');
+                syllables.className = 'text-xs text-indigo-600 font-bold';
+                syllables.textContent = role.syllables;
+
+                const desc = document.createElement('p');
+                desc.className = 'text-xs text-slate-400 line-clamp-2';
+                desc.textContent = role.desc;
+
+                const speakBtn = document.createElement('button');
+                speakBtn.className = 'mt-2 text-xs font-bold text-indigo-600 hover:text-indigo-800 flex items-center gap-1';
+                speakBtn.innerHTML = '🔊 Dengar Sebutan';
+                speakBtn.onclick = () => speakArabic(role.arabic);
+
+                info.appendChild(header);
+                info.appendChild(malayName);
+                info.appendChild(syllables);
+                info.appendChild(desc);
+                info.appendChild(speakBtn);
+
+                card.appendChild(avatarWrap);
+                card.appendChild(info);
+                container.appendChild(card);
+            });
+        }
+
+        function filterNoteCards(gender) {
+            ['all', 'muzakkar', 'muannath'].forEach(g => {
+                const btn = document.getElementById('filter-' + g);
+                if (btn) {
+                    if (g === gender) {
+                        btn.className = 'px-3 py-1.5 rounded-xl text-xs sm:text-sm font-bold bg-white text-indigo-600 shadow-sm transition';
+                    } else {
+                        btn.className = 'px-3 py-1.5 rounded-xl text-xs sm:text-sm font-bold text-slate-600 hover:text-indigo-600 transition';
+                    }
+                }
+            });
+            renderNoteCards(gender);
+        }
+
+        // --- 6. EDIT IMAGE MODAL LOGIC ---
+        function openEditImageModal(role) {
+            roleBeingEdited = role;
+            const modal = document.getElementById('editImageModal');
+            document.getElementById('modalRoleArabic').textContent = role.arabic;
+            document.getElementById('modalRoleMalay').textContent = role.malay;
+            document.getElementById('modalFileInput').value = '';
+
+            const avatarPreview = document.getElementById('modalPreviewAvatar');
+            applyAvatarStyle(avatarPreview, role);
+
+            modal.classList.remove('hidden');
+        }
+
+        function closeEditImageModal() {
+            document.getElementById('editImageModal').classList.add('hidden');
+            roleBeingEdited = null;
+        }
+
+        function handleModalImageUpload(event) {
+            const file = event.target.files[0];
+            if (!file || !roleBeingEdited) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const base64Data = e.target.result;
+                localStorage.setItem('custom_role_img_' + roleBeingEdited.id, base64Data);
+                const avatarPreview = document.getElementById('modalPreviewAvatar');
+                applyAvatarStyle(avatarPreview, roleBeingEdited);
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function resetRoleToDefault() {
+            if (!roleBeingEdited) return;
+            localStorage.removeItem('custom_role_img_' + roleBeingEdited.id);
+            const avatarPreview = document.getElementById('modalPreviewAvatar');
+            applyAvatarStyle(avatarPreview, roleBeingEdited);
+        }
+
+        function saveAndCloseModal() {
+            closeEditImageModal();
+            // Refresh views with newly updated image
+            renderHomeCards();
+            renderNoteCards('all');
+            updateSpeechStudioUI();
+        }
+
+        // --- 7. SPEECH STUDIO LOGIC ---
+        function updateSpeechStudioUI() {
+            const role = ROLES_DATA[currentSpeechIndex];
+            if (!role) return;
+
+            const avatarEl = document.getElementById('speechAvatar');
+            applyAvatarStyle(avatarEl, role);
+
+            document.getElementById('speechArabic').textContent = role.arabic;
+            document.getElementById('speechSyllables').textContent = `[ ${role.syllables} ]`;
+            document.getElementById('speechMalay').textContent = role.malay;
+            document.getElementById('speechRoleIndicator').textContent = `Watak ${currentSpeechIndex + 1} / ${ROLES_DATA.length}`;
+            document.getElementById('speechFeedback').classList.add('hidden');
+        }
+
+        function prevSpeechRole() {
+            currentSpeechIndex = (currentSpeechIndex - 1 + ROLES_DATA.length) % ROLES_DATA.length;
+            updateSpeechStudioUI();
+        }
+
+        function nextSpeechRole() {
+            currentSpeechIndex = (currentSpeechIndex + 1) % ROLES_DATA.length;
+            updateSpeechStudioUI();
+        }
+
+        function playSpeechCurrent(rate = 1.0) {
+            const role = ROLES_DATA[currentSpeechIndex];
+            if (role) speakArabic(role.arabic, rate);
+        }
+
+        function speakArabic(text, rate = 1.0) {
+            if (!('speechSynthesis' in window)) return;
+            window.speechSynthesis.cancel();
+
+            const utterance = new SpeechSynthesisUtterance(text);
+            utterance.lang = 'ar-SA';
+            utterance.rate = rate;
+            window.speechSynthesis.speak(utterance);
+        }
+
+        function recordAndCheckSpeech() {
+            const fb = document.getElementById('speechFeedback');
+            fb.classList.remove('hidden');
+            fb.className = 'text-sm font-bold p-3 rounded-2xl bg-amber-50 text-amber-700 block';
+            fb.textContent = '🎙️ Mendengar sebutan anda... sila sebut dengan jelas!';
+
+            setTimeout(() => {
+                fb.className = 'text-sm font-bold p-3 rounded-2xl bg-emerald-50 text-emerald-700 block';
+                fb.textContent = '🌟 ممتاز! (Mumtaz!) Sebutan anda sangat baik dan jelas!';
+                addPoints(10);
+                triggerConfetti();
+            }, 2000);
+        }
+
+        // --- 8. GAMES CENTER: FLIP & MATCH (12 CARDS) ---
+        function switchGameSubMode(mode) {
+            ['flip', 'quiz', 'audio', 'gender'].forEach(m => {
+                const sec = document.getElementById('game-sub-' + m);
+                const btn = document.getElementById('btn-sub-' + m);
+                if (sec) sec.classList.toggle('hidden', m !== mode);
+                if (btn) {
+                    if (m === mode) {
+                        btn.className = 'px-4 py-2 rounded-2xl font-bold text-xs sm:text-sm bg-indigo-600 text-white shadow-md shadow-indigo-200 transition';
+                    } else {
+                        btn.className = 'px-4 py-2 rounded-2xl font-bold text-xs sm:text-sm bg-white text-slate-700 hover:bg-slate-50 transition border border-slate-200';
+                    }
+                }
+            });
+
+            if (mode === 'flip') initFlipAndMatchGame();
+            if (mode === 'quiz') initVisualQuiz();
+            if (mode === 'audio') initListeningGame();
+            if (mode === 'gender') initGenderClassification();
+        }
+
+        function initFlipAndMatchGame() {
+            clearInterval(flipTimerInterval);
+            flipMoves = 0;
+            flipSeconds = 0;
+            flippedIndices = [];
+            isFlipLocked = false;
+            document.getElementById('flipMoves').textContent = '0';
+            document.getElementById('flipTimer').textContent = '0s';
+
+            flipTimerInterval = setInterval(() => {
+                flipSeconds++;
+                document.getElementById('flipTimer').textContent = flipSeconds + 's';
+            }, 1000);
+
+            // Select 6 random distinct roles to create exactly 12 cards (6 pairs)
+            const shuffledRoles = [...ROLES_DATA].sort(() => 0.5 - Math.random()).slice(0, 6);
+            const deck = [];
+
+            shuffledRoles.forEach(r => {
+                // Card A: Image + Arabic label
+                deck.push({
+                    role: r,
+                    type: 'card-a',
+                    id: r.id
+                });
+                // Card B: Malay Meaning + Suku kata / info
+                deck.push({
+                    role: r,
+                    type: 'card-b',
+                    id: r.id
+                });
+            });
+
+            flipCards = deck.sort(() => 0.5 - Math.random());
+            renderFlipBoard();
+        }
+
+        function renderFlipBoard() {
+            const grid = document.getElementById('flipCardsGrid');
+            if (!grid) return;
+            grid.innerHTML = '';
+
+            flipCards.forEach((c, index) => {
+                const card = document.createElement('div');
+                card.className = 'flip-card';
+                card.id = `flip-card-${index}`;
+                card.onclick = () => onCardFlipClick(index);
+
+                const inner = document.createElement('div');
+                inner.className = 'flip-card-inner';
+
+                // Back Face (When face down) with requested title
+                const back = document.createElement('div');
+                back.className = 'flip-card-back';
+                back.innerHTML = `
+                    <div class="text-3xl mb-1">🏫</div>
+                    <div class="arabic-text font-bold text-base">مَنْ فِي الْمَدْرَسَةِ؟</div>
+                    <div class="text-[10px] opacity-75 mt-0.5">Buka Kad</div>
+                `;
+
+                // Front Face (Revealed content)
+                const front = document.createElement('div');
+                front.className = 'flip-card-front';
+
+                if (c.type === 'card-a') {
+                    const avatar = document.createElement('div');
+                    avatar.className = 'avatar-circle w-14 h-14 border-2 border-indigo-200 mb-1';
+                    applyAvatarStyle(avatar, c.role);
+
+                    const txt = document.createElement('div');
+                    txt.className = 'arabic-text text-lg font-bold text-indigo-950';
+                    txt.textContent = c.role.arabic;
+
+                    front.appendChild(avatar);
+                    front.appendChild(txt);
+                } else {
+                    front.innerHTML = `
+                        <div class="text-2xl mb-1">🇲🇾</div>
+                        <div class="font-bold text-slate-800 text-sm leading-tight text-center px-1">${c.role.malay}</div>
+                        <div class="text-[11px] text-indigo-600 font-bold mt-1">${c.role.gender === 'muzakkar' ? '👦 Muzakkar' : '👧 Muannath'}</div>
+                    `;
+                }
+
+                inner.appendChild(back);
+                inner.appendChild(front);
+                card.appendChild(inner);
+                grid.appendChild(card);
+            });
+        }
+
+        function onCardFlipClick(index) {
+            if (isFlipLocked) return;
+            const cardEl = document.getElementById(`flip-card-${index}`);
+            if (!cardEl || cardEl.classList.contains('flipped') || cardEl.classList.contains('matched')) return;
+
+            cardEl.classList.add('flipped');
+            flippedIndices.push(index);
+
+            // Pronounce Arabic if flipping Card A
+            if (flipCards[index].type === 'card-a') {
+                speakArabic(flipCards[index].role.arabic);
+            }
+
+            if (flippedIndices.length === 2) {
+                flipMoves++;
+                document.getElementById('flipMoves').textContent = flipMoves;
+                checkFlipMatch();
+            }
+        }
+
+        function checkFlipMatch() {
+            isFlipLocked = true;
+            const [i1, i2] = flippedIndices;
+            const c1 = flipCards[i1];
+            const c2 = flipCards[i2];
+
+            if (c1.id === c2.id && c1.type !== c2.type) {
+                // Match Found!
+                setTimeout(() => {
+                    const el1 = document.getElementById(`flip-card-${i1}`);
+                    const el2 = document.getElementById(`flip-card-${i2}`);
+                    if (el1) el1.classList.add('matched');
+                    if (el2) el2.classList.add('matched');
+
+                    addPoints(20);
+                    matchedPairsCount++;
+                    correctAnswers++;
+                    updateScoreUI();
+
+                    flippedIndices = [];
+                    isFlipLocked = false;
+
+                    // Check if all 12 cards (6 pairs) are matched
+                    const totalMatched = document.querySelectorAll('.flip-card.matched').length;
+                    if (totalMatched === flipCards.length) {
+                        clearInterval(flipTimerInterval);
+                        triggerConfetti();
+                    }
+                }, 400);
+            } else {
+                // Not Matched
+                setTimeout(() => {
+                    const el1 = document.getElementById(`flip-card-${i1}`);
+                    const el2 = document.getElementById(`flip-card-${i2}`);
+                    if (el1) el1.classList.remove('flipped');
+                    if (el2) el2.classList.remove('flipped');
+
+                    flippedIndices = [];
+                    isFlipLocked = false;
+                }, 900);
+            }
+        }
+
+        // --- 9. VISUAL QUIZ MODE ---
+        function initVisualQuiz() {
+            const role = ROLES_DATA[Math.floor(Math.random() * ROLES_DATA.length)];
+            currentQuizRole = role;
+
+            const avatarEl = document.getElementById('quizAvatar');
+            applyAvatarStyle(avatarEl, role);
+
+            const optionsGrid = document.getElementById('quizOptionsGrid');
+            optionsGrid.innerHTML = '';
+            document.getElementById('quizFeedback').classList.add('hidden');
+
+            const options = [role];
+            while (options.length < 4) {
+                const rand = ROLES_DATA[Math.floor(Math.random() * ROLES_DATA.length)];
+                if (!options.some(o => o.arabic === rand.arabic)) {
+                    options.push(rand);
+                }
+            }
+            options.sort(() => 0.5 - Math.random());
+
+            options.forEach(opt => {
+                const btn = document.createElement('button');
+                btn.className = 'py-3 px-4 rounded-2xl bg-slate-50 hover:bg-indigo-50 border border-slate-200 font-bold arabic-text text-xl text-slate-800 transition';
+                btn.textContent = opt.arabic;
+                btn.onclick = () => answerVisualQuiz(opt.arabic, btn);
+                optionsGrid.appendChild(btn);
+            });
+        }
+
+        function answerVisualQuiz(arabicChoice, btnEl) {
+            const fb = document.getElementById('quizFeedback');
+            fb.classList.remove('hidden');
+
+            if (arabicChoice === currentQuizRole.arabic) {
+                btnEl.className = 'py-3 px-4 rounded-2xl bg-emerald-500 text-white font-bold arabic-text text-xl';
+                fb.className = 'p-3 rounded-2xl bg-emerald-50 text-emerald-700 font-bold block';
+                fb.textContent = '🎉 Betul! Jawapan yang cemerlang!';
+                addPoints(15);
+                correctAnswers++;
+                triggerConfetti();
+                setTimeout(initVisualQuiz, 1400);
+            } else {
+                btnEl.className = 'py-3 px-4 rounded-2xl bg-rose-500 text-white font-bold arabic-text text-xl';
+                fb.className = 'p-3 rounded-2xl bg-rose-50 text-rose-700 font-bold block';
+                fb.textContent = 'Cuba lagi! Sila pilih jawapan yang tepat.';
+            }
+        }
+
+        // --- 10. LISTENING GAME MODE ---
+        function initListeningGame() {
+            currentAudioRole = ROLES_DATA[Math.floor(Math.random() * ROLES_DATA.length)];
+            const grid = document.getElementById('audioOptionsGrid');
+            grid.innerHTML = '';
+            document.getElementById('audioFeedback').classList.add('hidden');
+
+            const choices = [currentAudioRole];
+            while (choices.length < 4) {
+                const rand = ROLES_DATA[Math.floor(Math.random() * ROLES_DATA.length)];
+                if (!choices.some(c => c.id === rand.id)) {
+                    choices.push(rand);
+                }
+            }
+            choices.sort(() => 0.5 - Math.random());
+
+            choices.forEach(c => {
+                const card = document.createElement('div');
+                card.className = 'p-4 rounded-2xl bg-slate-50 hover:bg-indigo-50 border border-slate-200 cursor-pointer flex flex-col items-center gap-2 transition';
+                card.onclick = () => answerListeningGame(c.id);
+
+                const avatar = document.createElement('div');
+                avatar.className = 'avatar-circle w-16 h-16 border-2 border-white';
+                applyAvatarStyle(avatar, c);
+
+                const label = document.createElement('div');
+                label.className = 'text-xs font-bold text-slate-700 text-center';
+                label.textContent = c.malay;
+
+                card.appendChild(avatar);
+                card.appendChild(label);
+                grid.appendChild(card);
+            });
+
+            playListeningAudioPrompt();
+        }
+
+        function playListeningAudioPrompt() {
+            if (currentAudioRole) {
+                speakArabic(currentAudioRole.arabic);
+            }
+        }
+
+        function answerListeningGame(chosenId) {
+            const fb = document.getElementById('audioFeedback');
+            fb.classList.remove('hidden');
+
+            if (chosenId === currentAudioRole.id) {
+                fb.className = 'p-3 rounded-2xl bg-emerald-50 text-emerald-700 font-bold block';
+                fb.textContent = '🌟 Hebat! Pendengaran anda sangat tajam!';
+                addPoints(15);
+                correctAnswers++;
+                triggerConfetti();
+                setTimeout(initListeningGame, 1400);
+            } else {
+                fb.className = 'p-3 rounded-2xl bg-rose-50 text-rose-700 font-bold block';
+                fb.textContent = 'Kurang tepat. Tekan butang dengar dan cuba lagi!';
+            }
+        }
+
+        // --- 11. GENDER CLASSIFICATION MODE ---
+        function initGenderClassification() {
+            currentGenderRole = ROLES_DATA[Math.floor(Math.random() * ROLES_DATA.length)];
+            const avatarEl = document.getElementById('genderAvatar');
+            applyAvatarStyle(avatarEl, currentGenderRole);
+
+            document.getElementById('genderArabicWord').textContent = currentGenderRole.arabic;
+            document.getElementById('genderMalayWord').textContent = currentGenderRole.malay;
+            document.getElementById('genderFeedback').classList.add('hidden');
+        }
+
+        function answerGenderClassification(chosenGender) {
+            const fb = document.getElementById('genderFeedback');
+            fb.classList.remove('hidden');
+
+            if (chosenGender === currentGenderRole.gender) {
+                fb.className = 'p-3 rounded-2xl bg-emerald-50 text-emerald-700 font-bold block';
+                fb.textContent = '✨ Betul! Perkataan ini adalah ' + (chosenGender === 'muzakkar' ? 'Muzakkar (Lelaki).' : 'Muannath (Perempuan).');
+                addPoints(10);
+                correctAnswers++;
+                triggerConfetti();
+                setTimeout(initGenderClassification, 1400);
+            } else {
+                fb.className = 'p-3 rounded-2xl bg-rose-50 text-rose-700 font-bold block';
+                fb.textContent = 'Cuba lagi! Ingat tanda Ta Marbutah (ة) pada perkataan perempuan.';
+            }
+        }
+
+        // --- 12. SCORE & REWARDS ---
+        function addPoints(pts) {
+            userScore += pts;
+            updateScoreUI();
+        }
+
+        function updateScoreUI() {
+            const statScore = document.getElementById('statScoreTotal');
+            const statCorrect = document.getElementById('statCorrectTotal');
+            const statMatches = document.getElementById('statMatchesTotal');
+
+            if (statScore) statScore.textContent = userScore;
+            if (statCorrect) statCorrect.textContent = correctAnswers;
+            if (statMatches) statMatches.textContent = matchedPairsCount;
+        }
+
+        function resetPlayerScore() {
+            userScore = 0;
+            correctAnswers = 0;
+            matchedPairsCount = 0;
+            updateScoreUI();
+        }
+
+        function triggerConfetti() {
+            if (typeof confetti === 'function') {
+                confetti({
+                    particleCount: 50,
+                    spread: 60,
+                    origin: { y: 0.7 }
+                });
+            }
+        }
+
+        // --- 13. INITIALIZATION ON WINDOW LOAD ---
+        window.onload = function() {
+            renderHomeCards();
+            renderNoteCards('all');
+            updateSpeechStudioUI();
+        };
+    </script>
+</body>
+</html>
